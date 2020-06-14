@@ -1,0 +1,9 @@
+#!/usr/bin/with-contenv bash
+
+# XXX - Check if we are configured...
+s6-setuidgid abc /usr/bin/SpiderOakOne --userinfo
+
+# Drop privileges and run M/Monit
+s6-setuidgid abc /usr/bin/SpiderOakONE --headless
+
+
