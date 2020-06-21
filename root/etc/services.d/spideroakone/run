@@ -1,9 +1,13 @@
 #!/usr/bin/with-contenv bash
 
-# XXX - Check if we are configured...
-s6-setuidgid abc /usr/bin/SpiderOakOne --userinfo
+configured () {
+    [[ ! "$(SpiderOakONE --userinfo)" =~ 'New User Setup' ]]
+}
 
 # Drop privileges and run M/Monit
-s6-setuidgid abc /usr/bin/SpiderOakONE --headless
+if configured; then
+   s6-setuidgid abc /usr/bin/SpiderOakONE --headless
+fi
+
 
 

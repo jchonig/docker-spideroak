@@ -1,7 +1,6 @@
 # docker-spideroak
 A container running [SpiderOakONE](https://spideroak.com/one/) in a container
 
-
 # Usage
 
 ## docker
@@ -13,6 +12,11 @@ docker create \
   -e PGID=1000 \
   -e TZ=Europe/London \
   -v </path/to/appdata/config>:/config \
+  -v </path/to/backup1>:</path/to/backup1> \
+  -v </path/to/backup2>:</path/to/backup2> \
+  -v </path/to/backup3>:</path/to/backup3> \
+  ...
+  -v </path/to/backupN>:</path/to/backupN> \
   --restart unless-stopped \
   jchonig/spideroakone
 ```
@@ -34,15 +38,15 @@ services:
       - TZ=Europe/London
     volumes:
       - </path/to/appdata/config>:/config
+	  - </path/to/backup1>:/<path_to_backup1>
+	  - </path/to/backup2>:/<path_to_backup2>
+	  - </path/to/backup3>:/<path_to_backup3>
+	  ...
+	  - </path/to/backupN>:/<path_to_backupN>
     restart: unless-stopped
 ```
 
 # Parameters
-
-## Ports (--expose)
-
-| Volume | Function                                         |
-| ------ | --------                                         |
 
 ## Environment Variables (-e)
 
@@ -54,20 +58,22 @@ services:
 
 ## Volume Mappings (-v)
 
-| Volume  | Function                         |
-| ------  | --------                         |
-| XXX | TBD |
+| Volume           | Function           |
+| ------           | --------           |
+| /config          | Configuration data |
+| /path/to/backup1 | Volume to back up  |
+| /path/to/backup2 | Volume to back up  |
+| /path/to/backup3 | Volume to back up  |
+| /path/to/backup4 | Volume to back up  |
 
 # Application Setup
 
-  * Environment variables can also be passed in a file named `env` in
-    the `config` directory. This file is sourced by the shell.
+  * Volumes to be backed up must be listed in the `/config/volumes`
+    file, one per line
+  * `username`, `password`, `device_name` and optionally `reinstall`
+    must be provided in `/config/setup.json` on at least the first run.
 
 ## TODO
-  * Document adding volumes
-  * Document setup
-  * What to do if not configured?
-  * How to pass username and password securely?
   * LANSync?
 
 ## REFERENCE

@@ -1,5 +1,7 @@
 #!/usr/bin/with-contenv bash
 
+set -x
+
 print_vars () {
     if [ -n "${1}" ]; then
 	title=" ${1}"
@@ -7,21 +9,40 @@ print_vars () {
 	title=""
     fi
     echo "Environment${title}:"
+    echo "    HOME=${HOME}"
     echo "    PUID=${PUID}"
     echo "    PGID=${PGID}"
     echo "    TZ=${TZ}"
+    ls -FlasR /config
 }
 
 print_vars 
 
-# load env file if it exists
-if [ -f "/config/env" ]; then
-  source /config/env
-  print_vars "After sourcing /config/env"
-fi
+configured () {
+    [[ ! "$(SpiderOakONE --userinfo)" =~ 'New User Setup' ]]
+}
 
 # permissions
-# XXX ???
 chown -R abc:abc \
 	/config
 	
+if ! configured; then
+    if [ -f /config/setup.json ]; then
+	echo "Reading configuration from /config/setup.json"
+	SpiderOakONE --datadir /config/.spideroakone --setup=/config/setup.json
+    fi
+fi
+
+if configured; then
+    if [ -f /config/volumes ]; then
+	echo "Updating selections from /config/volumes"
+	SpiderOakOne --reset-selection
+	while IFS= read -r volume; do
+	    if [ ! -d "${volume}" ]; then
+		echo "Volume ${volume} is not mounted"
+		continue
+	    fi
+	    SpiderOakONE --include-dir="${volume}"
+	done < /config/volumes
+    fi
+fi
