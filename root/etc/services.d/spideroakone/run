@@ -1,13 +1,7 @@
 #!/usr/bin/with-contenv bash
 
-configured () {
-    [[ ! "$(SpiderOakONE --userinfo)" =~ 'New User Setup' ]]
-}
-
-# Drop privileges and run M/Monit
-if configured; then
-   s6-setuidgid abc /usr/bin/SpiderOakONE --headless
-fi
+# Drop privileges and run SpiderOakONE
+s6-setuidgid abc /usr/bin/SpiderOakONE --headless
 
 
 

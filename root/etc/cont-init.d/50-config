@@ -1,7 +1,5 @@
 #!/usr/bin/with-contenv bash
 
-set -x
-
 print_vars () {
     if [ -n "${1}" ]; then
 	title=" ${1}"
@@ -13,13 +11,27 @@ print_vars () {
     echo "    PUID=${PUID}"
     echo "    PGID=${PGID}"
     echo "    TZ=${TZ}"
-    ls -FlasR /config
+    echo "    SPIDEROAKDATADIR=${SPIDEROAKDATADIR}"
 }
 
-print_vars 
+print_vars
+
+spideroakone () {
+    s6-setuidgid abc /usr/bin/SpiderOakONE ${*}
+}
 
 configured () {
-    [[ ! "$(SpiderOakONE --userinfo)" =~ 'New User Setup' ]]
+    [[ ! "$(spideroakone --userinfo)" =~ 'New User Setup' ]]
+}
+
+try_setup () {
+    spideroakone --setup=/config/setup.json
+}
+
+update_reinstall () {
+    jq ".reinstall = '${1}'" /config/setup.json > /config/setup.json.new \
+	&& mv /config/setup.json.new /config/setup.json \
+	&& chmod 0600 /config/setup.json
 }
 
 # permissions
@@ -28,21 +40,44 @@ chown -R abc:abc \
 	
 if ! configured; then
     if [ -f /config/setup.json ]; then
-	echo "Reading configuration from /config/setup.json"
-	SpiderOakONE --datadir /config/.spideroakone --setup=/config/setup.json
+	echo "Setting configuration from /config/setup.json"
+	output=$(try_setup); rc=$?
+	if [ ${rc} -ne 0 ]; then
+	    if [[ "${output}" =~ 'Device not found:' ]]; then
+		echo "Trying setup w/o reinstall"
+		update_reinstall "false"
+		try_setup && update_reinstall "true"
+	    fi
+	fi
     fi
 fi
 
 if configured; then
     if [ -f /config/volumes ]; then
-	echo "Updating selections from /config/volumes"
-	SpiderOakOne --reset-selection
-	while IFS= read -r volume; do
-	    if [ ! -d "${volume}" ]; then
-		echo "Volume ${volume} is not mounted"
-		continue
-	    fi
-	    SpiderOakONE --include-dir="${volume}"
+	echo "Reseting selections"
+	spideroakone --reset-selection
+	echo "Updating selections"
+	while IFS= read -r type path; do
+	    echo "	${type}	${path}"
+	    case ${type} in
+		include-dir)
+		    if [ ! -d "${path}" ]; then
+			echo "Volume ${path} is not mounted"
+			continue
+		    fi
+		    spideroakone --${type}="${path}"
+		    ;;
+		include-file)
+		    if [ ! -f "${path}" ]; then
+			echo "File ${path} is not mounted"
+			continue
+		    fi
+		    spideroakone --${type}="${path}"
+		    ;;
+		exclude-*|purge)
+		    spideroakone --${type}="${path}"
+		    ;;
+	    esac
 	done < /config/volumes
     fi
 fi
