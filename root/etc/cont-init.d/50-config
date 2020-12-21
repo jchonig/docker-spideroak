@@ -80,4 +80,6 @@ if configured; then
 	    esac
 	done < /config/volumes
     fi
+    echo "Final Selection"
+    spideroakone --print-selection
 fi
