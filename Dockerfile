@@ -17,7 +17,7 @@ RUN \
 	apt-get autoremove && \
 	rm -rf /var/lib/apt/lists/* && \
         echo "**** install SpiderOakONE ****" && \
-	curl https://spideroak.com/release/spideroak/slack_tar_x64 | tar -xzf -
+	curl -sS https://spideroak.com/release/spideroak/slack_tar_x64 | tar -xzf -
 
 COPY root /
 
