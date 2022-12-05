@@ -4,6 +4,8 @@ Configuration for this container should be built by a CM tool as the
 mounted volumnes must match what is specified in `config/volumes` (see
 below).
 
+**THIS CONTAINER IS NO LONGER MAINTAINED**
+
 # Usage
 
 ## docker
